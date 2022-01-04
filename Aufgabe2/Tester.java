@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Test {
+public class Tester {
 
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_BLACK = "\u001B[30m";
@@ -139,7 +139,7 @@ public class Test {
     private final Equation equation;
     private final Operator[] globalOperators;
 
-    private Test(Equation equation, Operator[] operators) {
+    private Tester(Equation equation, Operator[] operators) {
         this.neededCycles = (long) Math.pow(4, equation.getOperands().length - 1);
         this.notifyThreshold = (int) Math.ceil(neededCycles * NOTIFY_PERCENTAGE);
         this.formatColors = new String[equation.getOperands().length - 1];
@@ -152,7 +152,7 @@ public class Test {
         solve(equation);
     }
 
-    private Test(Equation equation) {
+    private Tester(Equation equation) {
         this(equation, Operator.values());
     }
 
@@ -201,7 +201,7 @@ public class Test {
         }
 
         var equation = parse(equationStr);
-        var tester = new Test(equation, operators);
+        var tester = new Tester(equation, operators);
         tester.printAnalysis();
     }
 
@@ -215,7 +215,7 @@ public class Test {
         for (int length = 2; length < maxLength; length++) {
             for (int j = 0; j < iterations; j++) {
                 var equation = parse(gen.generateGroup(random.nextInt(2, 10), length).toString());
-                var test = new Test(equation, operators);
+                var test = new Tester(equation, operators);
                 if (test.solutions.size() == 1)
                     continue;
 
