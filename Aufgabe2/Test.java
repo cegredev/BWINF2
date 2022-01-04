@@ -122,8 +122,6 @@ public class Test {
             }
         };
 
-        public static final Operator[] VALUES = values();
-
         @Override
         public String toString() {
             return String.valueOf(getSymbol());
@@ -139,16 +137,23 @@ public class Test {
     private final String[] formatColors;
     private final List<Operator[]> solutions = new ArrayList<>();
     private final Equation equation;
+    private final Operator[] globalOperators;
 
-    private Test(Equation equation) {
+    private Test(Equation equation, Operator[] operators) {
         this.neededCycles = (long) Math.pow(4, equation.getOperands().length - 1);
         this.notifyThreshold = (int) Math.ceil(neededCycles * NOTIFY_PERCENTAGE);
         this.formatColors = new String[equation.getOperands().length - 1];
         this.equation = equation;
+        this.globalOperators = operators;
+
         for (int i = 0; i < formatColors.length; i++)
             formatColors[i] = ANSI_GREEN;
 
         solve(equation);
+    }
+
+    private Test(Equation equation) {
+        this(equation, Operator.values());
     }
 
     public void printAnalysis() {
@@ -185,26 +190,32 @@ public class Test {
         }
     }
 
-    public static void main(String[] args) {
-        // var scanner = new Scanner(System.in);
+    private static void runSingleAnalysis(String equationStr, Operator[] operators) {
+        if (equationStr == null) {
+            var scanner = new Scanner(System.in);
 
-        // System.out.print("Please enter an equation: ");
+            System.out.print("Please enter an equation: ");
 
-        // var equation = parse(scanner.nextLine());
-        // scanner.close();
+            equationStr = scanner.nextLine();
+            scanner.close();
+        }
 
-        // new Test(equation);
+        var equation = parse(equationStr);
+        var tester = new Test(equation, operators);
+        tester.printAnalysis();
+    }
 
+    private static void runMultipleAnalysis(Operator[] operators) {
         var gen = new Generator();
 
         final int iterations = 100;
         final int maxLength = 10;
         final var random = new Random();
 
-        for (int i = 2; i < maxLength; i++) {
+        for (int length = 2; length < maxLength; length++) {
             for (int j = 0; j < iterations; j++) {
-                var equation = parse(gen.generateGroup(random.nextInt(2, 10), i).toString());
-                var test = new Test(equation);
+                var equation = parse(gen.generateGroup(random.nextInt(2, 10), length).toString());
+                var test = new Test(equation, operators);
                 if (test.solutions.size() == 1)
                     continue;
 
@@ -212,8 +223,15 @@ public class Test {
                 for (var solution : test.solutions)
                     System.out.println(test.format(equation, solution));
             }
-        }
 
+            System.out.println("Finished length of " + length);
+        }
+    }
+
+    public static void main(String[] args) {
+        var mulDiv = new Operator[] { Operator.MUL, Operator.DIV };
+        // runSingleAnalysis("4 2 3 2 = 12", mulDiv);
+        runMultipleAnalysis(mulDiv);
         System.out.println(ANSI_RESET);
     }
 
@@ -243,7 +261,7 @@ public class Test {
                 // System.out.println("Solved with " + format(equation, operators));
             }
         } else {
-            for (var operator : Operator.VALUES) {
+            for (var operator : globalOperators) {
                 operators[index] = operator;
                 solve(equation, operators, index + 1);
             }
