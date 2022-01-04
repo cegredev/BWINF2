@@ -1,9 +1,11 @@
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 public class Solution {
 
@@ -231,11 +233,11 @@ public class Solution {
 
     }
 
-    private static class DivRestriction implements IRestriction {
+    private static class DivByRestriction implements IRestriction {
 
         private final Collection<Integer> allowed = new ArrayList<>();
 
-        public DivRestriction(int operand) {
+        public DivByRestriction(int operand) {
             for (int num = 2; num <= 9; num++)
                 if (EOperator.DIV.canOperate(operand, num))
                     allowed.add(num);
@@ -250,6 +252,31 @@ public class Solution {
 
     }
 
+    private static class CancelOutRestriction implements IRestriction {
+
+        private final Collection<Integer> allowed = new ArrayList<>();
+
+        public CancelOutRestriction(Set<Integer> others, Set<Integer> sameKind) {
+            Outer: for (int num = 2; num <= 9; num++) {
+                if (others.contains(num))
+                    continue;
+
+                for (int similar : sameKind)
+                    if (others.contains(similar * num))
+                        continue Outer;
+
+                allowed.add(num);
+            }
+        }
+
+        @Override
+        public Collection<Integer> restrict(EOperator purpose, Collection<Integer> nums) {
+            nums.retainAll(allowed);
+            return nums;
+        }
+
+    }
+
     private static class Selection {
 
         private final List<Integer> nums = new ArrayList<>(List.of(2, 3, 4, 5, 6, 7, 8, 9));
@@ -258,6 +285,10 @@ public class Solution {
         public void prepare() {
             Collections.shuffle(nums);
             restrictions.clear();
+        }
+
+        public void restrict(IRestriction restriction) {
+            restrictions.add(restriction);
         }
 
         public Optional<Integer> get(EOperator purpose) {
@@ -281,6 +312,8 @@ public class Solution {
         var operandNode = new Operand(initial);
         final var start = operandNode;
 
+        Set<Integer> mulNums = new HashSet<>(), divNums = new HashSet<>();
+
         int result = operandNode.operand;
         var selection = new Selection();
         for (int i = 1; i < length; i++) {
@@ -291,17 +324,22 @@ public class Solution {
             Operator operatorNode = null;
 
             if (roll <= divChance) {
-                selection.restrictions.add(new DivRestriction(result));
+                selection.restrict(new DivByRestriction(result));
+                selection.restrict(new CancelOutRestriction(mulNums, divNums));
 
                 var maybeOperand = selection.get(EOperator.DIV);
                 if (maybeOperand.isPresent()) {
                     operand = maybeOperand.get();
                     operatorNode = new Operator(EOperator.DIV);
                     result /= operand;
+
+                    fillSet(divNums, operand);
                 }
             }
 
             if (operatorNode == null) {
+                selection.restrict(new CancelOutRestriction(divNums, mulNums));
+
                 var maybeOperand = selection.get(EOperator.MUL);
                 if (maybeOperand.isEmpty())
                     throw new IllegalArgumentException("Unable to generate operand");
@@ -309,6 +347,8 @@ public class Solution {
                 operand = maybeOperand.get();
                 operatorNode = new Operator(EOperator.MUL);
                 result *= operand;
+
+                fillSet(mulNums, operand);
             }
 
             operandNode.setNext(operatorNode);
@@ -316,14 +356,26 @@ public class Solution {
             operatorNode.setNext(operandNode);
         }
 
+        System.out.println(mulNums + " " + divNums);
+
         return new Group(start, result);
+    }
+
+    private static void fillSet(Set<Integer> set, int num) {
+        var newNums = new ArrayList<Integer>(set.size() * 2);
+
+        for (int a : set)
+            newNums.add(a * num);
+
+        set.add(num);
+        set.addAll(newNums);
     }
 
     public static void main(String[] args) {
         var solution = new Solution();
 
         for (int i = 1; i <= 9; i++)
-            System.out.println(solution.generateGroup(i, 10));
+            System.out.println(solution.generateGroup(i, 8));
     }
 
 }
