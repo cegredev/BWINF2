@@ -7,194 +7,12 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
+import representation.EOperator;
+import representation.Group;
+import representation.Operand;
+import representation.Operator;
+
 public class Solution {
-
-    private static abstract class Node<T extends Node<?>> {
-
-        private T next;
-
-        protected Node(T next) {
-            this.next = next;
-        }
-
-        protected Node() {
-            this(null);
-        }
-
-        public T getNext() {
-            return next;
-        }
-
-        public void setNext(T next) {
-            this.next = next;
-        }
-
-    }
-
-    private static class Operand extends Node<Operator> {
-
-        private final int operand;
-
-        public Operand(int operand, Operator next) {
-            super(next);
-
-            this.operand = operand;
-        }
-
-        public Operand(int operand) {
-            this.operand = operand;
-        }
-
-        public int getOperand() {
-            return operand;
-        }
-
-        @Override
-        public String toString() {
-            return String.valueOf(getOperand());
-        }
-
-    }
-
-    private static interface IOperator {
-        int operate(int a, int b);
-
-        char getSymbol();
-
-        default boolean hasPriority() {
-            return false;
-        }
-
-        default boolean canOperate(int a, int b) {
-            return true;
-        }
-    }
-
-    private static enum EOperator implements IOperator {
-
-        ADD {
-            @Override
-            public int operate(int a, int b) {
-                return a + b;
-            }
-
-            @Override
-            public char getSymbol() {
-                return '+';
-            }
-        },
-        SUB {
-            @Override
-            public int operate(int a, int b) {
-                return a - b;
-            }
-
-            @Override
-            public char getSymbol() {
-                return '-';
-            }
-        },
-        MUL {
-            @Override
-            public int operate(int a, int b) {
-                return a * b;
-            }
-
-            @Override
-            public char getSymbol() {
-                return '*';
-            }
-
-            @Override
-            public boolean hasPriority() {
-                return true;
-            }
-        },
-        DIV {
-            @Override
-            public int operate(int a, int b) {
-                return a / b;
-            }
-
-            @Override
-            public char getSymbol() {
-                return '/';
-            }
-
-            @Override
-            public boolean canOperate(int a, int b) {
-                return b != 0 && a % b == 0;
-            }
-
-            @Override
-            public boolean hasPriority() {
-                return true;
-            }
-        };
-
-        public static final EOperator[] VALUES = values();
-
-        @Override
-        public String toString() {
-            return String.valueOf(getSymbol());
-        }
-
-    }
-
-    private static class Operator extends Node<Operand> {
-
-        private EOperator operator;
-
-        public Operator(EOperator operator, Operand next) {
-            super(next);
-
-            this.operator = operator;
-        }
-
-        public Operator(EOperator operator) {
-            this.operator = operator;
-        }
-
-        public EOperator getOperator() {
-            return operator;
-        }
-
-        @Override
-        public String toString() {
-            return getOperator().toString();
-        }
-
-    }
-
-    private static class Group {
-
-        private final int result;
-        private final Operand start;
-
-        public Group(Operand start, int result) {
-            this.start = start;
-            this.result = result;
-        }
-
-        @Override
-        public String toString() {
-            var builder = new StringBuilder();
-
-            Node<?> node = start;
-            do {
-                builder.append(node.toString());
-            } while ((node = node.getNext()) != null);
-
-            builder.append("=").append(getResult());
-
-            return builder.toString();
-        }
-
-        public int getResult() {
-            return result;
-        }
-
-    }
 
     private static interface IRestriction {
 
@@ -246,7 +64,7 @@ public class Solution {
         @Override
         public Collection<Integer> restrictDiv(Collection<Integer> nums) {
             nums.retainAll(allowed);
-            System.out.println("Restricting: " + nums);
+            // System.out.println("Restricting: " + nums);
             return nums;
         }
 
@@ -314,7 +132,7 @@ public class Solution {
 
         Set<Integer> mulNums = new HashSet<>(), divNums = new HashSet<>();
 
-        int result = operandNode.operand;
+        int result = operandNode.getOperand();
         var selection = new Selection();
         for (int i = 1; i < length; i++) {
             selection.prepare();
@@ -356,7 +174,7 @@ public class Solution {
             operatorNode.setNext(operandNode);
         }
 
-        System.out.println(mulNums + " " + divNums);
+        // System.out.println(mulNums + " " + divNums);
 
         return new Group(start, result);
     }
