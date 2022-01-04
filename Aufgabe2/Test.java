@@ -3,6 +3,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Test {
@@ -137,16 +138,20 @@ public class Test {
     private final long neededCycles, notifyThreshold;
     private final String[] formatColors;
     private final List<Operator[]> solutions = new ArrayList<>();
+    private final Equation equation;
 
     private Test(Equation equation) {
         this.neededCycles = (long) Math.pow(4, equation.getOperands().length - 1);
         this.notifyThreshold = (int) Math.ceil(neededCycles * NOTIFY_PERCENTAGE);
         this.formatColors = new String[equation.getOperands().length - 1];
+        this.equation = equation;
         for (int i = 0; i < formatColors.length; i++)
             formatColors[i] = ANSI_GREEN;
 
         solve(equation);
+    }
 
+    public void printAnalysis() {
         int amount = solutions.size();
         System.out.println("There were " + color(amount) + " solutions:");
 
@@ -178,18 +183,36 @@ public class Test {
                 count.clear();
             }
         }
-
     }
 
     public static void main(String[] args) {
-        var scanner = new Scanner(System.in);
+        // var scanner = new Scanner(System.in);
 
-        System.out.print("Please enter an equation: ");
+        // System.out.print("Please enter an equation: ");
 
-        var equation = parse(scanner.nextLine());
-        scanner.close();
+        // var equation = parse(scanner.nextLine());
+        // scanner.close();
 
-        new Test(equation);
+        // new Test(equation);
+
+        var gen = new Generator();
+
+        final int iterations = 100;
+        final int maxLength = 10;
+        final var random = new Random();
+
+        for (int i = 2; i < maxLength; i++) {
+            for (int j = 0; j < iterations; j++) {
+                var equation = parse(gen.generateGroup(random.nextInt(2, 10), i).toString());
+                var test = new Test(equation);
+                if (test.solutions.size() == 1)
+                    continue;
+
+                System.out.println("Equation " + equation + " has " + test.solutions.size() + " solutions!");
+                for (var solution : test.solutions)
+                    System.out.println(test.format(equation, solution));
+            }
+        }
 
         System.out.println(ANSI_RESET);
     }
@@ -211,13 +234,13 @@ public class Test {
     private void solve(Equation equation, Operator[] operators, int index) {
         if (index == operators.length) {
             int result = evaluate(equation, operators);
-            cycles++;
-            if (cycles % notifyThreshold == 0)
-                System.out.println((int) (cycles / (double) neededCycles * 100) + "% done.");
+            // cycles++;
+            // if (cycles % notifyThreshold == 0)
+            // System.out.println((int) (cycles / (double) neededCycles * 100) + "% done.");
 
             if (result == equation.getResult()) {
                 solutions.add(operators.clone());
-                System.out.println("Solved with " + format(equation, operators));
+                // System.out.println("Solved with " + format(equation, operators));
             }
         } else {
             for (var operator : Operator.VALUES) {

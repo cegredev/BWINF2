@@ -12,7 +12,7 @@ import representation.Group;
 import representation.Operand;
 import representation.Operator;
 
-public class Solution {
+public class Generator {
 
     private static interface IRestriction {
 
@@ -123,7 +123,7 @@ public class Solution {
     private double divChance = 0.2;
     private Random random = new Random();
 
-    private Group generateGroup(int initial, int length) {
+    public Group generateGroup(int initial, int length) {
         if (length <= 1)
             throw new IllegalArgumentException("Groups have to consist of two or more operands. Got: " + length);
 
@@ -190,7 +190,7 @@ public class Solution {
     }
 
     public static void main(String[] args) {
-        var solution = new Solution();
+        var solution = new Generator();
 
         for (int i = 1; i <= 9; i++)
             System.out.println(solution.generateGroup(i, 8));
