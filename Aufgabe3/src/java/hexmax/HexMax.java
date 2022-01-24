@@ -8,7 +8,7 @@ import java.util.Arrays;
 public class HexMax {
 
 	public static void main(String[] args) throws Exception {
-		var alphabet = Alphabet.readFrom(HexMax.class.getResourceAsStream("hexalphabet.txt"));
+		var alphabet = Alphabet.readFrom(HexMax.class.getResourceAsStream("hex_alphabet.txt"));
 		var hexConfig = HexConfig.fromFile(Path.of("samples/test.txt"), alphabet);
 
 		for (var digit : alphabet.highestValueToLowest())
