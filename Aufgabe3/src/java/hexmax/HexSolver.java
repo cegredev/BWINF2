@@ -10,7 +10,7 @@ public class HexSolver {
 	private final Alphabet alphabet;
 	private final Digit[] digits;
 
-	private int moves, changes;
+	private int additions, removals;
 	private int maxMinBorder;
 
 	public HexSolver(HexConfig config, Alphabet alphabet) {
@@ -19,26 +19,29 @@ public class HexSolver {
 		this.alphabet = alphabet;
 	}
 
+	private int totalMoves() {
+		return Math.max(additions, removals);
+	}
+
 	private void maximize() {
 		for (int i = 0; i < digits.length; i++) {
 			var digit = digits[i];
 
-			for (var higher : alphabet.highestValueToLowest()) {
-				if (digit.getValue() >= higher.value())
+			for (var target : alphabet.highestValueToLowest()) {
+				if (target.value() <= digit.getValue())
 					break;
 
-				var conversion = alphabet.convert(digit.getValue(), higher.value());
-
-				if (moves + conversion.getTotalMoves() <= maxMoves) {
-					moves += conversion.getTotalMoves();
-					changes += conversion.getChanges();
-					digit.set(higher.value(), conversion);
+				DigitConversion conversion = alphabet.convert(digit.getValue(), target.value());
+				if (totalMoves() + conversion.totalMoves() <= maxMoves) {
+					additions += conversion.additions();
+					removals += conversion.removals();
+					digit.set(target.value(), conversion);
 					break;
 				}
 			}
 
 			// If all moves have been used up, this phase is completed
-			if (moves == maxMoves) {
+			if (totalMoves() == maxMoves) {
 				maxMinBorder = i;
 				break;
 			}
@@ -50,9 +53,11 @@ public class HexSolver {
 	public Digit[] solve() {
 		maximize();
 
-		while (changes != 0) {
+		while (additions != removals) {
 			break;
 		}
+
+		System.out.println("Finished solving. Final stats: additions: " + additions + " removals: " + removals);
 
 		return digits;
 	}

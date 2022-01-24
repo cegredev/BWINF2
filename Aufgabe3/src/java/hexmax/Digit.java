@@ -1,6 +1,5 @@
 package hexmax;
 
-import hexmax.alphabet.Alphabet;
 import hexmax.alphabet.Symbol;
 
 public class Digit {
@@ -8,7 +7,7 @@ public class Digit {
 	private final int originalValue;
 
 	private int value;
-	private Alphabet.Conversion conversion;
+	private DigitConversion conversion;
 
 	public Digit(int value) {
 		this.originalValue = value;
@@ -19,7 +18,7 @@ public class Digit {
 		this(symbol.value());
 	}
 
-	public void set(int value, Alphabet.Conversion conversion) {
+	public void set(int value, DigitConversion conversion) {
 		this.value = value;
 		this.conversion = conversion;
 	}
@@ -45,7 +44,7 @@ public class Digit {
 		return "D[v=" + numToSymbol(originalValue) + ",t=" + getTargetSymbol() + "]";
 	}
 
-	public Alphabet.Conversion getConversion() {
+	public DigitConversion getConversion() {
 		return conversion;
 	}
 }

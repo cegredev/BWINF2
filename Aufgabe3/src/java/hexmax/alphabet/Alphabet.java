@@ -1,5 +1,7 @@
 package hexmax.alphabet;
 
+import hexmax.DigitConversion;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +15,7 @@ public class Alphabet {
 
 	private final Symbol[] symbols; // Um Ziffern schnell nach ihrem Wert finden zu können
 	private final Map<String, Symbol> symbolLookup; // Um Ziffern schnell nach ihrem Symbol finden zu können
-	private final Conversion[][] conversions;
+	private final DigitConversion[][] conversions; // Conversions zwischen Werten
 
 	public Alphabet(Symbol[] symbols) {
 		this.symbols = symbols;
@@ -22,7 +24,7 @@ public class Alphabet {
 		for (var symbol : symbols)
 			symbolLookup.put(symbol.text(), symbol);
 
-		conversions = new Conversion[symbols.length][symbols.length];
+		conversions = new DigitConversion[symbols.length][symbols.length];
 
 		// TODO: This very likely works, but... maybe check all combinations? Thank youuu
 		for (int i = 0; i < symbols.length; i++) {
@@ -31,18 +33,16 @@ public class Alphabet {
 			for (int j = 0; j < symbols.length; j++) {
 				boolean[] to = symbols[j].bits();
 
-				int moves = 0, changes = 0;
+				int additions = 0, removals = 0;
 				for (int bitIndex = 0; bitIndex < from.length; bitIndex++) {
-					int difference = binary(to[bitIndex]) - binary(from[bitIndex]);
-
-					if (difference != 0) {
-						moves++;
-						changes += difference;
-					}
+					if (from[bitIndex] != to[bitIndex])
+						if (from[bitIndex])
+							removals++;
+						else
+							additions++;
 				}
 
-				int switches = (moves - Math.abs(changes)) / 2;
-				conversions[i][j] = new Conversion(switches, changes);
+				conversions[i][j] = new DigitConversion(additions, removals);
 			}
 		}
 	}
@@ -86,10 +86,6 @@ public class Alphabet {
 		return digits;
 	}
 
-	private static int binary(boolean bool) {
-		return bool ? 1 : 0;
-	}
-
 	public Iterable<Symbol> highestValueToLowest() {
 		return () -> new Iterator<>() {
 
@@ -107,40 +103,8 @@ public class Alphabet {
 		};
 	}
 
-	public Conversion convert(int from, int to) {
+	public DigitConversion convert(int from, int to) {
 		return conversions[from][to];
-	}
-
-	public static class Conversion {
-
-		private final int switches;
-		private final int changes;
-		private final int totalMoves;
-
-		private Conversion(int switches, int changes) {
-			this.switches = switches;
-			this.changes = changes;
-
-			this.totalMoves = switches + Math.abs(changes);
-		}
-
-		public int getSwitches() {
-			return switches;
-		}
-
-		public int getChanges() {
-			return changes;
-		}
-
-		public int getTotalMoves() {
-			return totalMoves;
-		}
-
-		@Override
-		public String toString() {
-			return "Con[switches=" + switches + ",changes=" + changes + "]";
-		}
-
 	}
 
 }
