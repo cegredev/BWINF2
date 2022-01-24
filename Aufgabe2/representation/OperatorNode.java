@@ -1,16 +1,16 @@
 package representation;
 
-public class Operator extends Node<Operand> {
+public class OperatorNode extends Node<OperandNode> {
 
     private EOperator operator;
 
-    public Operator(EOperator operator, Operand next) {
+    public OperatorNode(EOperator operator, OperandNode next) {
         super(next);
 
         this.operator = operator;
     }
 
-    public Operator(EOperator operator) {
+    public OperatorNode(EOperator operator) {
         this.operator = operator;
     }
 

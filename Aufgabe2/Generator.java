@@ -9,12 +9,12 @@ import java.util.Set;
 
 import representation.EOperator;
 import representation.Group;
-import representation.Operand;
-import representation.Operator;
+import representation.OperandNode;
+import representation.OperatorNode;
 
 public class Generator {
 
-    private static interface IRestriction {
+    private static interface Restriction {
 
         public default Collection<Integer> restrict(EOperator purpose, Collection<Integer> nums) {
             switch (purpose) {
@@ -37,21 +37,36 @@ public class Generator {
 
     }
 
-    private static enum Restriction implements IRestriction {
+    private static class SinglePairRestriction implements Restriction {
 
-        SINGLE_PAIR {
+        private final int initial;
 
-            @Override
-            public Collection<Integer> restrictMul(Collection<Integer> nums) {
-                nums.remove(2);
-                return nums;
+        public SinglePairRestriction(int initial) {
+            this.initial = initial;
+        }
+
+        @Override
+        public Collection<Integer> restrict(EOperator purpose, Collection<Integer> nums) {
+            boolean remove = false;
+
+            switch (purpose) {
+                case ADD, MUL:
+                    remove = initial == 2;
+                    break;
+                case SUB, DIV:
+                    remove = initial == 4;
+                    break;
             }
 
-        };
+            if (remove)
+                nums.remove(2);
+
+            return nums;
+        }
 
     }
 
-    private static class DivByRestriction implements IRestriction {
+    private static class DivByRestriction implements Restriction {
 
         private final Collection<Integer> allowed = new ArrayList<>();
 
@@ -64,32 +79,31 @@ public class Generator {
         @Override
         public Collection<Integer> restrictDiv(Collection<Integer> nums) {
             nums.retainAll(allowed);
-            // System.out.println("Restricting: " + nums);
             return nums;
         }
 
     }
 
-    private static class CancelOutRestriction implements IRestriction {
+    private static class CancelOutRestriction implements Restriction {
 
-        private final Collection<Integer> allowed = new ArrayList<>();
+        private final Set<Integer> opposites, sameKind;
 
-        public CancelOutRestriction(Set<Integer> others, Set<Integer> sameKind) {
-            Outer: for (int num = 2; num <= 9; num++) {
-                if (others.contains(num))
-                    continue;
-
-                for (int similar : sameKind)
-                    if (others.contains(similar * num))
-                        continue Outer;
-
-                allowed.add(num);
-            }
+        public CancelOutRestriction(Set<Integer> opposites, Set<Integer> sameKind) {
+            this.opposites = opposites;
+            this.sameKind = sameKind;
         }
 
         @Override
         public Collection<Integer> restrict(EOperator purpose, Collection<Integer> nums) {
-            nums.retainAll(allowed);
+            var iter = nums.iterator();
+
+            while (iter.hasNext()) {
+                int num = iter.next();
+
+                if (opposites.contains(num) || sameKind.stream().anyMatch(n -> opposites.contains(n * num)))
+                    iter.remove();
+            }
+
             return nums;
         }
 
@@ -98,21 +112,28 @@ public class Generator {
     private static class Selection {
 
         private final List<Integer> nums = new ArrayList<>(List.of(2, 3, 4, 5, 6, 7, 8, 9));
-        private final List<IRestriction> restrictions = new ArrayList<>();
+        private final List<Restriction> restrictions = new ArrayList<>();
+        private final List<Restriction> tempRestrictions = new ArrayList<>();
 
         public void prepare() {
             Collections.shuffle(nums);
-            restrictions.clear();
+            tempRestrictions.clear();
         }
 
-        public void restrict(IRestriction restriction) {
+        public void restrict(Restriction restriction) {
             restrictions.add(restriction);
+        }
+
+        public void restrictTemp(Restriction restriction) {
+            tempRestrictions.add(restriction);
         }
 
         public Optional<Integer> get(EOperator purpose) {
             var clone = new ArrayList<>(nums);
 
             for (var restriction : restrictions)
+                restriction.restrict(purpose, clone);
+            for (var restriction : tempRestrictions)
                 restriction.restrict(purpose, clone);
 
             return clone.isEmpty() ? Optional.empty() : Optional.of(clone.get(0));
@@ -127,28 +148,31 @@ public class Generator {
         if (length <= 1)
             throw new IllegalArgumentException("Groups have to consist of two or more operands. Got: " + length);
 
-        var operandNode = new Operand(initial);
+        var operandNode = new OperandNode(initial);
         final var start = operandNode;
+
+        var selection = new Selection();
+        if (length == 2)
+            selection.restrict(new SinglePairRestriction(initial));
 
         Set<Integer> mulNums = new HashSet<>(), divNums = new HashSet<>();
 
         int result = operandNode.getOperand();
-        var selection = new Selection();
         for (int i = 1; i < length; i++) {
             selection.prepare();
 
             int operand = -1;
             double roll = random.nextDouble();
-            Operator operatorNode = null;
+            OperatorNode operatorNode = null;
 
             if (roll <= divChance) {
-                selection.restrict(new DivByRestriction(result));
-                selection.restrict(new CancelOutRestriction(mulNums, divNums));
+                selection.restrictTemp(new DivByRestriction(result));
+                selection.restrictTemp(new CancelOutRestriction(mulNums, divNums));
 
                 var maybeOperand = selection.get(EOperator.DIV);
                 if (maybeOperand.isPresent()) {
                     operand = maybeOperand.get();
-                    operatorNode = new Operator(EOperator.DIV);
+                    operatorNode = new OperatorNode(EOperator.DIV);
                     result /= operand;
 
                     fillSet(divNums, operand);
@@ -156,21 +180,21 @@ public class Generator {
             }
 
             if (operatorNode == null) {
-                selection.restrict(new CancelOutRestriction(divNums, mulNums));
+                selection.restrictTemp(new CancelOutRestriction(divNums, mulNums));
 
                 var maybeOperand = selection.get(EOperator.MUL);
                 if (maybeOperand.isEmpty())
                     throw new IllegalArgumentException("Unable to generate operand");
 
                 operand = maybeOperand.get();
-                operatorNode = new Operator(EOperator.MUL);
+                operatorNode = new OperatorNode(EOperator.MUL);
                 result *= operand;
 
                 fillSet(mulNums, operand);
             }
 
             operandNode.setNext(operatorNode);
-            operandNode = new Operand(operand);
+            operandNode = new OperandNode(operand);
             operatorNode.setNext(operandNode);
         }
 

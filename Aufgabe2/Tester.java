@@ -208,7 +208,7 @@ public class Tester {
     private static void runMultipleAnalysis(Operator[] operators) {
         var gen = new Generator();
 
-        final int iterations = 100;
+        final int iterations = 100_000;
         final int maxLength = 10;
         final var random = new Random();
 
@@ -231,7 +231,9 @@ public class Tester {
     public static void main(String[] args) {
         var mulDiv = new Operator[] { Operator.MUL, Operator.DIV };
         // runSingleAnalysis("4 2 3 2 = 12", mulDiv);
-        runMultipleAnalysis(mulDiv);
+        // runSingleAnalysis(null, Operator.values());
+        // runMultipleAnalysis(mulDiv);
+        runMultipleAnalysis(Operator.values());
         System.out.println(ANSI_RESET);
     }
 

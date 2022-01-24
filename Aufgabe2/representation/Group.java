@@ -3,9 +3,9 @@ package representation;
 public class Group {
 
     private final int result;
-    private final Operand start;
+    private final OperandNode start;
 
-    public Group(Operand start, int result) {
+    public Group(OperandNode start, int result) {
         this.start = start;
         this.result = result;
     }
