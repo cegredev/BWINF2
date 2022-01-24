@@ -1,22 +1,22 @@
 package hexmax;
 
 import hexmax.alphabet.Alphabet;
-import hexmax.alphabet.Digit;
+import hexmax.alphabet.Symbol;
 
-public class WorkingDigit {
+public class Digit {
 
 	private final int originalValue;
 
 	private int value;
 	private Alphabet.Conversion conversion;
 
-	public WorkingDigit(int value) {
+	public Digit(int value) {
 		this.originalValue = value;
 		this.value = value;
 	}
 
-	public WorkingDigit(Digit digit) {
-		this(digit.getValue());
+	public Digit(Symbol symbol) {
+		this(symbol.value());
 	}
 
 	public void set(int value, Alphabet.Conversion conversion) {

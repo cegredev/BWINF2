@@ -11,25 +11,25 @@ import java.util.*;
 
 public class Alphabet {
 
-	private final Digit[] symbols; // Um Ziffern schnell nach ihrem Wert finden zu können
-	private final Map<String, Digit> symbolLookup; // Um Ziffern schnell nach ihrem Symbol finden zu können
+	private final Symbol[] symbols; // Um Ziffern schnell nach ihrem Wert finden zu können
+	private final Map<String, Symbol> symbolLookup; // Um Ziffern schnell nach ihrem Symbol finden zu können
 	private final Conversion[][] conversions;
 
-	public Alphabet(Digit[] symbols) {
+	public Alphabet(Symbol[] symbols) {
 		this.symbols = symbols;
 
 		symbolLookup = new HashMap<>(symbols.length);
 		for (var symbol : symbols)
-			symbolLookup.put(symbol.getSymbol(), symbol);
+			symbolLookup.put(symbol.text(), symbol);
 
 		conversions = new Conversion[symbols.length][symbols.length];
 
 		// TODO: This very likely works, but... maybe check all combinations? Thank youuu
 		for (int i = 0; i < symbols.length; i++) {
-			boolean[] from = symbols[i].getBits();
+			boolean[] from = symbols[i].bits();
 
 			for (int j = 0; j < symbols.length; j++) {
-				boolean[] to = symbols[j].getBits();
+				boolean[] to = symbols[j].bits();
 
 				int moves = 0, changes = 0;
 				for (int bitIndex = 0; bitIndex < from.length; bitIndex++) {
@@ -49,8 +49,8 @@ public class Alphabet {
 
 	public static Alphabet readFrom(InputStream input) throws IOException {
 		try (var reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
-			final char SET_BIT = '1';
-			var digits = new ArrayList<Digit>();
+			final char SET_BIT = '1'; // Steht für eine aktive Stelle im 7-Segment-Display
+			var symbols = new ArrayList<Symbol>();
 
 			String line;
 			for (int value = 0; (line = reader.readLine()) != null; value++) {
@@ -59,19 +59,17 @@ public class Alphabet {
 					throw new IllegalArgumentException("Wrongly formatted line!");
 
 				String representation = split[1].trim();
-				if (representation.length() != Digit.TOTAL_PLACES)
+				if (representation.length() != Symbol.TOTAL_PLACES)
 					throw new IllegalArgumentException("Wrong representation!");
 
 				var bits = new boolean[representation.length()];
 				for (int i = 0; i < bits.length; i++)
 					bits[i] = representation.charAt(i) == SET_BIT;
 
-				var digit = new ReadDigit(value, bits, split[0]);
-				digits.add(digit);
+				symbols.add(new Symbol(value, split[0], bits));
 			}
 
-			input.close();
-			return new Alphabet(digits.toArray(new Digit[0]));
+			return new Alphabet(symbols.toArray(new Symbol[0]));
 		}
 	}
 
@@ -79,8 +77,8 @@ public class Alphabet {
 		return readFrom(Files.newInputStream(path));
 	}
 
-	public Digit[] stringToNum(CharSequence sequence) {
-		var digits = new Digit[sequence.length()];
+	public Symbol[] stringToNum(CharSequence sequence) {
+		var digits = new Symbol[sequence.length()];
 
 		for (int i = 0; i < digits.length; i++)
 			digits[i] = symbolLookup.get(String.valueOf(sequence.charAt(i)));
@@ -92,7 +90,7 @@ public class Alphabet {
 		return bool ? 1 : 0;
 	}
 
-	public Iterable<Digit> highestValueToLowest() {
+	public Iterable<Symbol> highestValueToLowest() {
 		return () -> new Iterator<>() {
 
 			private int counter = symbols.length - 1;
@@ -103,13 +101,13 @@ public class Alphabet {
 			}
 
 			@Override
-			public Digit next() {
+			public Symbol next() {
 				return symbols[counter--];
 			}
 		};
 	}
 
-	public Conversion change(int from, int to) {
+	public Conversion convert(int from, int to) {
 		return conversions[from][to];
 	}
 

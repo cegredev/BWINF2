@@ -8,14 +8,14 @@ public class HexSolver {
 
 	private final int maxMoves;
 	private final Alphabet alphabet;
-	private final WorkingDigit[] digits;
+	private final Digit[] digits;
 
 	private int moves, changes;
 	private int maxMinBorder;
 
 	public HexSolver(HexConfig config, Alphabet alphabet) {
 		this.maxMoves = config.maxMoves();
-		this.digits = Arrays.stream(config.digits()).map(WorkingDigit::new).toList().toArray(new WorkingDigit[0]);
+		this.digits = Arrays.stream(config.digits()).map(Digit::new).toList().toArray(new Digit[0]);
 		this.alphabet = alphabet;
 	}
 
@@ -24,29 +24,35 @@ public class HexSolver {
 			var digit = digits[i];
 
 			for (var higher : alphabet.highestValueToLowest()) {
-				if (digit.getValue() >= higher.getValue())
+				if (digit.getValue() >= higher.value())
 					break;
 
-				var conversion = alphabet.change(digit.getValue(), higher.getValue());
+				var conversion = alphabet.convert(digit.getValue(), higher.value());
 
 				if (moves + conversion.getTotalMoves() <= maxMoves) {
 					moves += conversion.getTotalMoves();
 					changes += conversion.getChanges();
-					digit.set(higher.getValue(), conversion);
+					digit.set(higher.value(), conversion);
 					break;
 				}
 			}
 
-			// If all maxMoves have been used up, this phase is completed
+			// If all moves have been used up, this phase is completed
 			if (moves == maxMoves) {
 				maxMinBorder = i;
 				break;
 			}
 		}
+
+		System.out.println("Border: " + maxMinBorder);
 	}
 
-	public WorkingDigit[] solve() {
+	public Digit[] solve() {
 		maximize();
+
+		while (changes != 0) {
+			break;
+		}
 
 		return digits;
 	}
