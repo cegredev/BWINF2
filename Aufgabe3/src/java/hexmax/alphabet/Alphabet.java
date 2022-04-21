@@ -1,6 +1,7 @@
 package hexmax.alphabet;
 
-import hexmax.DigitConversion;
+import hexmax.Digit;
+import hexmax.SymbolConversion;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,12 +11,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Alphabet {
 
 	private final Symbol[] symbols; // Um Ziffern schnell nach ihrem Wert finden zu können
 	private final Map<String, Symbol> symbolLookup; // Um Ziffern schnell nach ihrem Symbol finden zu können
-	private final DigitConversion[][] conversions; // Conversions zwischen Werten
+	private final SymbolConversion[][] conversions; // Conversions zwischen Werten
+	private final List<List<SymbolConversion>> conversionsByAdditions; // Conversions zwischen Werten
+	private final List<List<SymbolConversion>> conversionsByRemovals; // Conversions zwischen Werten
 
 	public Alphabet(Symbol[] symbols) {
 		this.symbols = symbols;
@@ -24,7 +29,7 @@ public class Alphabet {
 		for (var symbol : symbols)
 			symbolLookup.put(symbol.text(), symbol);
 
-		conversions = new DigitConversion[symbols.length][symbols.length];
+		conversions = new SymbolConversion[symbols.length][symbols.length];
 
 		// TODO: This very likely works, but... maybe check all combinations? Thank youuu
 		for (int i = 0; i < symbols.length; i++) {
@@ -42,9 +47,38 @@ public class Alphabet {
 							additions++;
 				}
 
-				conversions[i][j] = new DigitConversion(additions, removals);
+				conversions[i][j] = new SymbolConversion(additions, removals, symbols[j]);
 			}
 		}
+
+		conversionsByAdditions = genSorted(SymbolConversion::additions, SymbolConversion::removals);
+		conversionsByRemovals = genSorted(SymbolConversion::removals, SymbolConversion::additions);
+	}
+
+	private List<List<SymbolConversion>> genSorted(Function<SymbolConversion, Integer> primary, Function<SymbolConversion, Integer> secondary) {
+		var totalList = new ArrayList<List<SymbolConversion>>(symbols.length);
+
+		for (var arr : conversions) {
+			var list = new ArrayList<>(Arrays.stream(arr).sorted(Comparator.comparingInt(primary::apply)).toList());
+//			System.out.println(list);
+
+			for (int i = list.size() - 1; i > 0; i--) {
+				var conversion = list.get(i);
+				var other = list.get(i - 1);
+
+				if (primary.apply(conversion) == primary.apply(other)) {
+					if (secondary.apply(conversion) > secondary.apply(other)) {
+						list.remove(i);
+					} else {
+						list.remove(i - 1);
+					}
+				}
+			}
+
+			totalList.add(list);
+		}
+
+		return totalList;
 	}
 
 	public static Alphabet readFrom(InputStream input) throws IOException {
@@ -103,8 +137,28 @@ public class Alphabet {
 		};
 	}
 
-	public DigitConversion convert(int from, int to) {
+	public SymbolConversion convert(int from, int to) {
 		return conversions[from][to];
+	}
+
+	public List<SymbolConversion> getAllConversionsByAdditions(int from) {
+		return conversionsByAdditions.get(from);
+	}
+
+	public List<SymbolConversion> getAllConversionsByRemovals(int from) {
+		return conversionsByRemovals.get(from);
+	}
+
+	public int getMaxValue() {
+		return symbols.length - 1;
+	}
+
+	public int getMinValue() {
+		return 0;
+	}
+
+	public Symbol[] getSymbols() {
+		return symbols;
 	}
 
 }

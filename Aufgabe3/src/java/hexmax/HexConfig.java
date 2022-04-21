@@ -16,6 +16,13 @@ public record HexConfig(int maxMoves, Symbol[] digits) {
 
 			int maxMoves = Integer.parseInt(reader.readLine());
 
+			int setBits = Arrays.stream(digits).mapToInt(Symbol::getSetBits).sum();
+			int unsetBits = Symbol.TOTAL_PLACES * digits.length - setBits;
+
+			// Es können nie mehr Bits bewegt werden, als es zur Verfügung stehen, aber können
+			// auch nie mehr Bits bewegt werden, als freie Plätze zur Verfügung stehen
+			maxMoves = Math.min(maxMoves, Math.min(setBits, unsetBits));
+
 			return new HexConfig(maxMoves, digits);
 		}
 	}
