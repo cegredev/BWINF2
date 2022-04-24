@@ -1,5 +1,8 @@
 package rechenrätsel;
 
+/**
+ * Repräsentiert einen Operator wie Addition oder Multiplikation.
+ */
 public enum Operator {
 
 	ADD {
@@ -7,37 +10,11 @@ public enum Operator {
 		public int calculate(int a, int b) {
 			return a + b;
 		}
-
-		@Override
-		public Operator getOpposite() {
-			return SUBTRACT;
-		}
-
-		@Override
-		public char getSymbol() {
-			return '+';
-		}
-
-		@Override
-		public boolean mayOperate(int a, int b) {
-			// 2 + 2 == 2 * 2, not having it
-			return a != 2 && b != 2;
-		}
 	},
 	SUBTRACT {
 		@Override
 		public int calculate(int a, int b) {
 			return a - b;
-		}
-
-		@Override
-		public Operator getOpposite() {
-			return ADD;
-		}
-
-		@Override
-		public char getSymbol() {
-			return '-';
 		}
 	},
 	MULTIPLY {
@@ -47,24 +24,8 @@ public enum Operator {
 		}
 
 		@Override
-		public Operator getOpposite() {
-			return DIVIDE;
-		}
-
-		@Override
-		public char getSymbol() {
-			return '*';
-		}
-
-		@Override
 		public boolean hasPriority() {
-			return true;
-		}
-
-		@Override
-		public boolean mayOperate(int a, int b) {
-			// Can't multiply with 1 because that would create a scenario in which adding could create a bigger number than multiplying
-			return true;
+			return false;
 		}
 	},
 	DIVIDE {
@@ -74,53 +35,35 @@ public enum Operator {
 		}
 
 		@Override
-		public Operator getOpposite() {
-			return MULTIPLY;
-		}
-
-		@Override
-		public char getSymbol() {
-			return '/';
-		}
-
-		@Override
 		public boolean canOperate(int a, int b) {
-			return mayOperate(a, b);
-		}
-
-		@Override
-		public boolean mayOperate(int a, int b) {
 			return b != 0 && a % b == 0;
 		}
 
 		@Override
 		public boolean hasPriority() {
-			return true;
+			return false;
 		}
 	};
 
+	public static final Operator[] VALUES = values();
+
+	/**
+	 * Wendet den Operator auf die Variablen a und b an.
+	 */
 	public abstract int calculate(int a, int b);
 
-	public abstract Operator getOpposite();
-
-	public abstract char getSymbol();
-
+	/**
+	 * Gibt zurück, ob ein Operator nicht priorisiert wird.
+	 */
 	public boolean hasPriority() {
-		return false;
+		return true;
 	}
 
-	// For tester
+	/**
+	 * Gibt zurück, ob ein Operator auf die gegebenen Variablen angewandt werden kann. Ein Negativbeispiel ist 3 / 2.
+	 */
 	public boolean canOperate(int a, int b) {
 		return true;
-	}
-
-	public boolean mayOperate(int a, int b) {
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		return String.valueOf(getSymbol());
 	}
 
 }

@@ -54,12 +54,14 @@ public class Tester {
 	}
 
 	public static void main(String[] args) {
-		var mulDiv = new Operator[]{Operator.MULTIPLY, Operator.DIVIDE};
+//		var mulDiv = new Operator[]{Operator.MULTIPLY, Operator.DIVIDE};
 		// 4*3*2*6*3*9+7*8/2*9*4-4*6-4*4*5
 //		runSingleAnalysis("4 ◦ 3 ◦ 2 ◦ 6 ◦ 3 ◦ 9 ◦ 7 ◦ 8 ◦ 2 ◦ 9 ◦ 4 ◦ 4 ◦ 6 ◦ 4 ◦ 4 ◦ 5 = 4792", Operator.values());
-		runSingleAnalysis("3 5 7 2 3 8 2 = 222", Operator.values());
+//		runSingleAnalysis("3 5 7 2 3 8 2 = 222", Operator.values());
 		// runMultipleAnalysis(mulDiv);
 //		runMultipleAnalysis(Operator.values());
+
+		runSingleAnalysis(null, Operator.values());
 		System.out.println(ANSI_RESET);
 	}
 
