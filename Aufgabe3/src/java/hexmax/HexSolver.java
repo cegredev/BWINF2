@@ -22,14 +22,6 @@ public class HexSolver {
 		this.alphabet = alphabet;
 	}
 
-	private static Comparator<SymbolConversion> conversionComparator(Function<SymbolConversion, Integer> getter) {
-		return Comparator.comparingInt(getter::apply);
-	}
-
-	private int totalMoves() {
-		return Math.max(additions, removals);
-	}
-
 	/**
 	 * Optimistically increase every digit to its maximum (cap) value.
 	 *
@@ -104,8 +96,6 @@ public class HexSolver {
 	public Digit[] solve() {
 		int start = 0;
 
-		int iterations = 0;
-
 		// PHASE 1: Alle Digits zu ihrer größtmöglichen Darstellung bekommen
 		while (!maximize(start)) {
 			System.out.println("Completed maximizing: additions: " + additions + " removals: " + removals + " state: " + String.join("", Arrays.stream(digits).map(Digit::getTargetSymbol).toList()));
@@ -114,12 +104,11 @@ public class HexSolver {
 			int newStart = balance(start);
 			System.out.println("Completed balancing: additions: " + additions + " removals: " + removals + " state: " + String.join("", Arrays.stream(digits).map(Digit::getTargetSymbol).toList()));
 
+			var digit = digits[start];
 			if (newStart == start)
-				digits[start].setMaximum(digits[start].getMaximum() - 1);
+				digit.setMaximum(digit.getMaximum() - 1);
 
 			start = newStart;
-
-//			if (iterations++ >= 10) break;
 		}
 
 		System.out.println("Finished solving. Final stats: additions: " + additions + " removals: " + removals);
