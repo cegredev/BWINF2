@@ -1,6 +1,5 @@
 package hexmax.alphabet;
 
-import hexmax.Digit;
 import hexmax.SymbolConversion;
 
 import java.io.BufferedReader;
@@ -8,79 +7,74 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
+/**
+ * Hier werden die Zeichen des verwendeten Alphabets gespeichert. Ein Alphabet könnte die Hexadezimal oder auch
+ * Binär-Darstellung sein.
+ */
 public class Alphabet {
 
 	private final Symbol[] symbols; // Um Ziffern schnell nach ihrem Wert finden zu können
+	private final SymbolConversion[][] conversions; // Umwandlung zwischen Werten
 	private final Map<String, Symbol> symbolLookup; // Um Ziffern schnell nach ihrem Symbol finden zu können
-	private final SymbolConversion[][] conversions; // Conversions zwischen Werten
-	private final List<List<SymbolConversion>> conversionsByAdditions; // Conversions zwischen Werten
-	private final List<List<SymbolConversion>> conversionsByRemovals; // Conversions zwischen Werten
+	// Umwandlungen zwischen Werten, sortiert nach Ergänzungen
+	private final List<List<SymbolConversion>> conversionsByAdditions;
+	// Umwandlungen zwischen Werten, sortiert nach Entnahmen
+	private final List<List<SymbolConversion>> conversionsByRemovals;
 
 	public Alphabet(Symbol[] symbols) {
 		this.symbols = symbols;
 
+		// Speichert die Symbole nach ihrem Zeichen
 		symbolLookup = new HashMap<>(symbols.length);
 		for (var symbol : symbols)
 			symbolLookup.put(symbol.text(), symbol);
 
+		// Speichert die Umwandlungen nach ihren Werten
 		conversions = new SymbolConversion[symbols.length][symbols.length];
 
-		// TODO: This very likely works, but... maybe check all combinations? Thank youuu
 		for (int i = 0; i < symbols.length; i++) {
 			boolean[] from = symbols[i].bits();
 
 			for (int j = 0; j < symbols.length; j++) {
-				boolean[] to = symbols[j].bits();
+				var toSymbol = symbols[j];
+				boolean[] to = toSymbol.bits();
+
+				// Speichert für die Umwandlung welche Stellen fehlen und welche zu viel sind
+				List<Integer> missingBits = new ArrayList<>(Symbol.TOTAL_PLACES),
+						spareBits = new ArrayList<>(Symbol.TOTAL_PLACES);
 
 				int additions = 0, removals = 0;
 				for (int bitIndex = 0; bitIndex < from.length; bitIndex++) {
-					if (from[bitIndex] != to[bitIndex])
-						if (from[bitIndex])
+					// Wenn zwei Stellen unterschiedlich sind...
+					if (from[bitIndex] != to[bitIndex]) {
+						// ...und die Stelle ursprünglich besetzt ist, entferne diese Stelle.
+						if (from[bitIndex]) {
 							removals++;
-						else
+							spareBits.add(bitIndex);
+						} else {
+							// Ansonsten füge eine hinzu.
 							additions++;
-				}
-
-				conversions[i][j] = new SymbolConversion(additions, removals, symbols[j]);
-			}
-		}
-
-		conversionsByAdditions = genSorted(SymbolConversion::additions, SymbolConversion::removals);
-		conversionsByRemovals = genSorted(SymbolConversion::removals, SymbolConversion::additions);
-	}
-
-	private List<List<SymbolConversion>> genSorted(Function<SymbolConversion, Integer> primary, Function<SymbolConversion, Integer> secondary) {
-		var totalList = new ArrayList<List<SymbolConversion>>(symbols.length);
-
-		for (var arr : conversions) {
-			var list = new ArrayList<>(Arrays.stream(arr).sorted(Comparator.comparingInt(primary::apply)).toList());
-//			System.out.println(list);
-
-			for (int i = list.size() - 1; i > 0; i--) {
-				var conversion = list.get(i);
-				var other = list.get(i - 1);
-
-				if (primary.apply(conversion) == primary.apply(other)) {
-					if (secondary.apply(conversion) > secondary.apply(other)) {
-						list.remove(i);
-					} else {
-						list.remove(i - 1);
+							missingBits.add(bitIndex);
+						}
 					}
 				}
-			}
 
-			totalList.add(list);
+				// Die Umwandlung von Wert i nach Wert j ist...
+				conversions[i][j] = new SymbolConversion(additions, removals, toSymbol, missingBits, spareBits);
+			}
 		}
 
-		return totalList;
+		// Generiert sortierte Listen für die Umwandlungen benötigt für die balance Methode
+		conversionsByAdditions = conversionsSorted(SymbolConversion::additions, SymbolConversion::removals);
+		conversionsByRemovals = conversionsSorted(SymbolConversion::removals, SymbolConversion::additions);
 	}
 
+	/**
+	 * Liest ein Alphabet von einem InputStream ein.
+	 */
 	public static Alphabet readFrom(InputStream input) throws IOException {
 		try (var reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
 			final char SET_BIT = '1'; // Steht für eine aktive Stelle im 7-Segment-Display
@@ -107,38 +101,63 @@ public class Alphabet {
 		}
 	}
 
-	public static Alphabet fromFile(Path path) throws IOException {
-		return readFrom(Files.newInputStream(path));
+	/**
+	 * Sortiert die Umwandlungen auf eine Weise, das für entweder fehlende Ergänzungen oder Entnahmen, die optimale
+	 * Umwandlung oben ist.
+	 */
+	private List<List<SymbolConversion>> conversionsSorted(Function<SymbolConversion, Integer> primary,
+														   Function<SymbolConversion, Integer> secondary) {
+		// Hier werden die sortieren Listen drin gespeichert
+		var totalList = new ArrayList<List<SymbolConversion>>(symbols.length);
+
+		for (var arr : conversions) {
+			var list = new ArrayList<>(Arrays.stream(arr).sorted(Comparator.comparingInt(primary::apply)).toList());
+
+			for (int i = list.size() - 1; i > 0; i--) {
+				var conversion = list.get(i);
+				var other = list.get(i - 1);
+
+				// Wenn entweder die Ergänzungen oder Entnahmen (primary) gleich sind...
+				if (primary.apply(conversion).equals(primary.apply(other))) {
+					// ...entferne das Element mit dem größten Gegenteil (secondary -> Entnahmen/Ergänzungen).
+					// Dadurch bekommt man nicht nur die maximale Anzahl von der Resource, die man braucht, sondern
+					// auch die geringste von der, die man nicht braucht.
+					if (secondary.apply(conversion) > secondary.apply(other)) {
+						list.remove(i);
+					} else {
+						list.remove(i - 1);
+					}
+				}
+			}
+
+			totalList.add(list);
+		}
+
+		return totalList;
 	}
 
+	/**
+	 * Konvertiert eine Liste an Charakteren zu einem Array von passenden Symbolen aus diesem Alphabet.
+	 */
 	public Symbol[] stringToNum(CharSequence sequence) {
 		var digits = new Symbol[sequence.length()];
 
-		for (int i = 0; i < digits.length; i++)
-			digits[i] = symbolLookup.get(String.valueOf(sequence.charAt(i)));
+		for (int i = 0; i < digits.length; i++) {
+			var digit = digits[i] = symbolLookup.get(String.valueOf(sequence.charAt(i)));
+
+			if (digit == null)
+				throw new IllegalArgumentException("Die Aufgaben-Datei passt nicht zum gewählten Alphabet.");
+		}
 
 		return digits;
 	}
 
-	public Iterable<Symbol> highestValueToLowest() {
-		return () -> new Iterator<>() {
-
-			private int counter = symbols.length - 1;
-
-			@Override
-			public boolean hasNext() {
-				return counter >= 0;
-			}
-
-			@Override
-			public Symbol next() {
-				return symbols[counter--];
-			}
-		};
-	}
-
 	public SymbolConversion convert(int from, int to) {
 		return conversions[from][to];
+	}
+
+	public Symbol getSymbolByValue(int value) {
+		return symbols[value];
 	}
 
 	public List<SymbolConversion> getAllConversionsByAdditions(int from) {
@@ -151,10 +170,6 @@ public class Alphabet {
 
 	public int getMaxValue() {
 		return symbols.length - 1;
-	}
-
-	public int getMinValue() {
-		return 0;
 	}
 
 	public Symbol[] getSymbols() {

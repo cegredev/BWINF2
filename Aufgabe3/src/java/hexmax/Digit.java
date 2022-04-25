@@ -2,6 +2,9 @@ package hexmax;
 
 import hexmax.alphabet.Symbol;
 
+/**
+ * Repräsentiert eine Ziffer.
+ */
 public class Digit {
 
 	private final int originalValue;
@@ -11,31 +14,25 @@ public class Digit {
 	public Digit(int value) {
 		this.originalValue = value;
 		this.value = value;
-		this.maximum = HexMax.alphabet.getMaxValue();
+		this.maximum = HexMax.getConfig().alphabet().getMaxValue();
 	}
 
 	public Digit(Symbol symbol) {
 		this(symbol.value());
 	}
 
-	private static char numToSymbol(int num) {
-		if (num < 10) {
-			return (char) ('0' + num);
-		} else {
-			return (char) ('A' - 10 + num);
-		}
-	}
-
-	public void set(int value, SymbolConversion conversion) {
-		this.value = value;
+	/**
+	 * Wandelt diese Ziffer in eine andere um.
+	 */
+	public void convert(SymbolConversion conversion) {
+		this.value = conversion.target().value();
 		this.additions = conversion.additions();
 		this.removals = conversion.removals();
 	}
 
-	public String getTargetSymbol() {
-		return "" + numToSymbol(value);
-	}
-
+	/**
+	 * @return Der Wert, der für diese Ziffer angestrebt wird.
+	 */
 	public int getValue() {
 		return value;
 	}
@@ -44,14 +41,23 @@ public class Digit {
 		return originalValue;
 	}
 
+	/**
+	 * @return Die Anzahl an Ergänzungen an Stellen für diese Ziffer.
+	 */
 	public int getAdditions() {
 		return additions;
 	}
 
+	/**
+	 * @return Die Anzahl an Entnahmen von Stellen für diese Ziffer.
+	 */
 	public int getRemovals() {
 		return removals;
 	}
 
+	/**
+	 * @return Der maximale Wert, den diese Ziffer haben kann.
+	 */
 	public int getMaximum() {
 		return maximum;
 	}
@@ -62,7 +68,7 @@ public class Digit {
 
 	@Override
 	public String toString() {
-		return "D[v=" + numToSymbol(originalValue) + ",t=" + getTargetSymbol() + "]";
+		return HexMax.getConfig().alphabet().getSymbols()[getValue()].toString();
 	}
 
 }

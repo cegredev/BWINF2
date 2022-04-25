@@ -117,3 +117,7 @@ dmypy.json
 .class
 .idea/
 out/
+
+# Documents
+*.pdf
+*.docx
