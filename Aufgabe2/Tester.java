@@ -57,7 +57,12 @@ public class Tester {
 	}
 
 	public static void main(String[] args) throws Exception {
-		runSingleAnalysis(null, Operator.values());
+		var equations = """
+3◦8◦2◦6◦8◦3◦5◦2◦9◦7◦8◦1◦3◦5◦3◦2=3459
+				""".split("\n");
+
+		for (var equation : equations)
+			runSingleAnalysis(equation, Operator.values());
 //		runSingleAnalysis("5 6 5=6", Operator.values());
 	}
 
