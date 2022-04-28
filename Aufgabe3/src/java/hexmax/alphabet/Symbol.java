@@ -14,7 +14,8 @@ public record Symbol(int value, String text, boolean[] bits) {
 		this.text = text;
 
 		if (bits.length != TOTAL_PLACES)
-			throw new IllegalArgumentException("Ziffer besteht nicht aus vorgegebener Anzahl an Stellen!");
+			throw new IllegalArgumentException("Ziffer besteht nicht aus vorgegebener Anzahl " +
+					"an Stellen!");
 
 		this.bits = bits;
 	}

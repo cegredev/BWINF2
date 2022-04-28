@@ -6,8 +6,6 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -15,7 +13,8 @@ import java.util.Scanner;
  */
 public class HexMax {
 
-	private static HexConfig config;
+	// FIXME: Package-private for tester
+	static HexConfig config;
 
 	public static void main(String[] args) throws IOException {
 		try (var scanner = new Scanner(System.in)) {

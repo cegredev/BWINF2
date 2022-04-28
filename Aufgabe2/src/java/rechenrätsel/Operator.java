@@ -25,7 +25,7 @@ public enum Operator {
 
 		@Override
 		public boolean hasPriority() {
-			return false;
+			return true;
 		}
 	},
 	DIVIDE {
@@ -41,7 +41,7 @@ public enum Operator {
 
 		@Override
 		public boolean hasPriority() {
-			return false;
+			return true;
 		}
 	};
 
@@ -53,10 +53,10 @@ public enum Operator {
 	public abstract int calculate(int a, int b);
 
 	/**
-	 * Gibt zurück, ob ein Operator nicht priorisiert wird.
+	 * Gibt zurück, ob ein Operator priorisiert wird.
 	 */
 	public boolean hasPriority() {
-		return true;
+		return false;
 	}
 
 	/**

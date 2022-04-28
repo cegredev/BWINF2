@@ -11,14 +11,15 @@ import java.util.*;
 import java.util.function.Function;
 
 /**
- * Hier werden die Zeichen des verwendeten Alphabets gespeichert. Ein Alphabet könnte die Hexadezimal oder auch
- * Binär-Darstellung sein.
+ * Hier werden die Zeichen des verwendeten Alphabets gespeichert. Ein Alphabet könnte die
+ * Hexadezimal oder auch Binär-Darstellung sein.
  */
 public class Alphabet {
 
 	private final Symbol[] symbols; // Um Ziffern schnell nach ihrem Wert finden zu können
 	private final SymbolConversion[][] conversions; // Umwandlung zwischen Werten
-	private final Map<String, Symbol> symbolLookup; // Um Ziffern schnell nach ihrem Symbol finden zu können
+	// Um Ziffern schnell nach ihrem Symbol finden zu können
+	private final Map<String, Symbol> symbolLookup;
 	// Umwandlungen zwischen Werten, sortiert nach Ergänzungen
 	private final List<List<SymbolConversion>> conversionsByAdditions;
 	// Umwandlungen zwischen Werten, sortiert nach Entnahmen
@@ -63,20 +64,24 @@ public class Alphabet {
 				}
 
 				// Die Umwandlung von Wert i nach Wert j ist...
-				conversions[i][j] = new SymbolConversion(additions, removals, toSymbol, missingBits, spareBits);
+				conversions[i][j] = new SymbolConversion(additions, removals, toSymbol,
+						missingBits, spareBits);
 			}
 		}
 
 		// Generiert sortierte Listen für die Umwandlungen benötigt für die balance Methode
-		conversionsByAdditions = conversionsSorted(SymbolConversion::additions, SymbolConversion::removals);
-		conversionsByRemovals = conversionsSorted(SymbolConversion::removals, SymbolConversion::additions);
+		conversionsByAdditions = conversionsSorted(SymbolConversion::additions,
+				SymbolConversion::removals);
+		conversionsByRemovals = conversionsSorted(SymbolConversion::removals,
+				SymbolConversion::additions);
 	}
 
 	/**
 	 * Liest ein Alphabet von einem InputStream ein.
 	 */
 	public static Alphabet readFrom(InputStream input) throws IOException {
-		try (var reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
+		try (var reader = new BufferedReader(new InputStreamReader(input,
+				StandardCharsets.UTF_8))) {
 			final char SET_BIT = '1'; // Steht für eine aktive Stelle im 7-Segment-Display
 			var symbols = new ArrayList<Symbol>();
 
@@ -102,8 +107,8 @@ public class Alphabet {
 	}
 
 	/**
-	 * Sortiert die Umwandlungen auf eine Weise, das für entweder fehlende Ergänzungen oder Entnahmen, die optimale
-	 * Umwandlung oben ist.
+	 * Sortiert die Umwandlungen auf eine Weise, das für entweder fehlende Ergänzungen oder
+	 * Entnahmen, die optimale Umwandlung oben ist.
 	 */
 	private List<List<SymbolConversion>> conversionsSorted(Function<SymbolConversion, Integer> primary,
 														   Function<SymbolConversion, Integer> secondary) {
@@ -111,7 +116,8 @@ public class Alphabet {
 		var totalList = new ArrayList<List<SymbolConversion>>(symbols.length);
 
 		for (var arr : conversions) {
-			var list = new ArrayList<>(Arrays.stream(arr).sorted(Comparator.comparingInt(primary::apply)).toList());
+			var list =
+					new ArrayList<>(Arrays.stream(arr).sorted(Comparator.comparingInt(primary::apply)).toList());
 
 			for (int i = list.size() - 1; i > 0; i--) {
 				var conversion = list.get(i);
@@ -119,8 +125,10 @@ public class Alphabet {
 
 				// Wenn entweder die Ergänzungen oder Entnahmen (primary) gleich sind...
 				if (primary.apply(conversion).equals(primary.apply(other))) {
-					// ...entferne das Element mit dem größten Gegenteil (secondary -> Entnahmen/Ergänzungen).
-					// Dadurch bekommt man nicht nur die maximale Anzahl von der Resource, die man braucht, sondern
+					// ...entferne das Element mit dem größten Gegenteil (secondary ->
+					// Entnahmen/Ergänzungen).
+					// Dadurch bekommt man nicht nur die maximale Anzahl von der Resource, die
+					// man braucht, sondern
 					// auch die geringste von der, die man nicht braucht.
 					if (secondary.apply(conversion) > secondary.apply(other)) {
 						list.remove(i);
@@ -137,7 +145,8 @@ public class Alphabet {
 	}
 
 	/**
-	 * Konvertiert eine Liste an Charakteren zu einem Array von passenden Symbolen aus diesem Alphabet.
+	 * Konvertiert eine Liste an Charakteren zu einem Array von passenden Symbolen aus diesem
+	 * Alphabet.
 	 */
 	public Symbol[] stringToNum(CharSequence sequence) {
 		var digits = new Symbol[sequence.length()];
@@ -146,7 +155,8 @@ public class Alphabet {
 			var digit = digits[i] = symbolLookup.get(String.valueOf(sequence.charAt(i)));
 
 			if (digit == null)
-				throw new IllegalArgumentException("Die Aufgaben-Datei passt nicht zum gewählten Alphabet.");
+				throw new IllegalArgumentException("Die Aufgaben-Datei passt nicht zum " +
+						"gewählten Alphabet.");
 		}
 
 		return digits;

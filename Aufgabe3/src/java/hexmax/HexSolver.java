@@ -11,14 +11,17 @@ import java.util.*;
 public class HexSolver {
 
 	private final int maxMoves;
-	private final Digit[] digits;
 	private final Alphabet alphabet;
+
+	// FIXME: Unmarked as final and package-private to work with tester!
+	Digit[] digits;
 
 	private int additions, removals;
 
 	public HexSolver(HexConfig config) {
 		this.maxMoves = config.maxMoves();
-		this.digits = Arrays.stream(config.digits()).map(Digit::new).toList().toArray(new Digit[0]);
+		this.digits =
+				Arrays.stream(config.digits()).map(Digit::new).toList().toArray(new Digit[0]);
 		this.alphabet = config.alphabet();
 	}
 
@@ -26,8 +29,8 @@ public class HexSolver {
 	 * Überprüft, ob eine Umwandlung ausgeführt werden kann, und tut dies falls möglich.
 	 */
 	private boolean tryConversion(Digit digit, SymbolConversion conversion) {
-		// Die Differenzen zwischen den Umlegungen, die die Ziffer momentan benötigt und wie viele sie hinter
-		// benötigen würde
+		// Die Differenzen zwischen den Umlegungen, die die Ziffer momentan benötigt und wie
+		// viele sie hinter benötigen würde
 		int additionDiff = conversion.additions() - digit.getAdditions();
 		int removalDiff = conversion.removals() - digit.getRemovals();
 
@@ -46,7 +49,8 @@ public class HexSolver {
 	}
 
 	/**
-	 * Erhöht alle Ziffern der Zahl, solange bis alle Umlegungen aufgebraucht oder das Ende der Zahl erreicht sind/ist.
+	 * Erhöht alle Ziffern der Zahl, solange bis alle Umlegungen aufgebraucht oder das Ende der
+	 * Zahl erreicht sind/ist.
 	 *
 	 * @return Ob sich die Zahl in ihrem bestmöglichen Zustand befindet.
 	 */
@@ -61,25 +65,30 @@ public class HexSolver {
 				// Wandle vom originalen zum neuen Wert um
 				var conversion = alphabet.convert(original, target);
 
-				// Falls die Umwandlung erfolgreich war, springe zur nächsten Ziffer (oder beende den Vorgang)
+				// Falls die Umwandlung erfolgreich war, springe zur nächsten Ziffer (oder
+				// beende den Vorgang)
 				if (tryConversion(digit, conversion))
 					break;
 			}
 
-			// Wenn alle Umlegungen verwendet wurden, befindet sich die Zahl in ihrer größtmöglichen Form.
+			// Wenn alle Umlegungen verwendet wurden, befindet sich die Zahl in ihrer
+			// größtmöglichen Form.
 			if (additions == maxMoves && removals == maxMoves)
 				return true;
 		}
 
-		// Wenn das Ende der Zahl erreicht wurde und nicht alle Umlegungen ausgeschöpft wurden, aber die Anzahl an
-		// Ergänzungen und Entnahmen gleich ist, befindet sich die Zahl trotzdem in ihrer größtmöglichen Form.
+		// Wenn das Ende der Zahl erreicht wurde und nicht alle Umlegungen ausgeschöpft
+		// wurden, aber die Anzahl an
+		// Ergänzungen und Entnahmen gleich ist, befindet sich die Zahl trotzdem in ihrer
+		// größtmöglichen Form.
 		return additions == removals;
 	}
 
 	/**
-	 * Versucht die Ergänzungen und Entnahmen dieser Zahl zu balancieren, indem Ziffern von rechts nach links in die
-	 * Form versetzt werden, in der sie am meisten der fehlenden Resource (Ergänzung oder Entnahme) verwenden. Dies
-	 * passiert so lange, bis ein Gleichgewicht erreicht oder das Ungleichgewicht umgekehrt wurde.
+	 * Versucht die Ergänzungen und Entnahmen dieser Zahl zu balancieren, indem Ziffern von
+	 * rechts nach links in die Form versetzt werden, in der sie am meisten der fehlenden
+	 * Resource (Ergänzung oder Entnahme) verwenden. Dies passiert so lange, bis ein
+	 * Gleichgewicht erreicht oder das Ungleichgewicht umgekehrt wurde.
 	 */
 	private int balance(int stop) {
 		// Ob zu Beginn des Balance-Prozesses die Ergänzungen oder Entnahmen überwiegten
@@ -100,18 +109,22 @@ public class HexSolver {
 			for (int j = conversions.size() - 1; j >= 0; j--) {
 				var conversion = conversions.get(j);
 
-				// Falls die Umwandlung erfolgreich war, springe zur nächsten Ziffer (oder beende den Vorgang)
+				// Falls die Umwandlung erfolgreich war, springe zur nächsten Ziffer (oder
+				// beende den Vorgang)
 				if (tryConversion(digit, conversion))
 					break;
 			}
 
-			// Wenn ein Gleichgewicht geschaffen oder das Ungleichgewicht gekippt wurde, ist diese Funktion fertig
-			if ((additionsWereGreater && removals >= additions) || (!additionsWereGreater && additions >= removals))
+			// Wenn ein Gleichgewicht geschaffen oder das Ungleichgewicht gekippt wurde, ist
+			// diese Funktion fertig
+			if ((additionsWereGreater && removals >= additions)
+					|| (!additionsWereGreater && additions >= removals))
 				return i;
 		}
 
-		// Wenn die Funktion wieder am Anfang angekommen ist, konnte sie ihr Ziel nicht erreichen. In dem Fall wird
-		// der maximale Wert für die entsprechende Stelle (stop) gesenkt. Siehe "solve".
+		// Wenn die Funktion wieder am Anfang angekommen ist, konnte sie ihr Ziel nicht
+		// erreichen. In dem Fall wird der maximale Wert für die entsprechende Stelle (stop)
+		// gesenkt. Siehe "solve".
 		return stop;
 	}
 
@@ -122,16 +135,19 @@ public class HexSolver {
 		// Der Prozess startet am Anfang der Zahl
 		int start = 0;
 
-		// Erhöht die Werte der einzelnen Ziffern so lange, bis eine funktionierende Lösung gefunden wurde
+		// Erhöht die Werte der einzelnen Ziffern so lange,
+		// bis eine funktionierende Lösung gefunden wurde
 		while (!maximize(start)) {
-			// Da während der maximize Funktion nicht auf eine gleiche Verteilung der Ergänzungen und Entnahmen
-			// geachtet wird, versucht diese Funktion diese Balance wieder herzustellen.
-			// Bis zu dem Index, den balance zurückgibt (exklusiv) befinden sich die Ziffern bereits in ihrer besten
-			// Form.
+			// Da während der maximize Funktion nicht auf eine gleiche Verteilung der
+			// Ergänzungen und Entnahmen  geachtet wird, versucht diese Funktion diese Balance
+			// wieder herzustellen. Bis zu dem Index, den balance zurückgibt (exklusiv)
+			// befinden
+			// sich die Ziffern bereits in ihrer besten Form.
 			int newStart = balance(start);
 
-			// Wenn man nach der Balancierung wieder bei der Zahl ankommt, bei der man angefangen hat, kann diese in
-			// ihrer höchsten Form so nicht verwendet werden, und muss ihr Maximum gesenkt bekommen
+			// Wenn man nach der Balancierung wieder bei der Zahl ankommt,
+			// bei der man angefangen hat, kann diese in  ihrer höchsten Form
+			// so nicht verwendet werden, und muss ihr Maximum gesenkt bekommen
 			var digit = digits[start];
 			if (newStart == start)
 				digit.setMaximum(digit.getMaximum() - 1);
@@ -139,7 +155,9 @@ public class HexSolver {
 			start = newStart;
 		}
 
-		// War die maximize Funktion erfolgreich, befindet sich die Zahl in ihrem höchsten Zustand
+		System.out.println("Done with additions: " + additions + " removals: " + removals);
+
+		// War die maximize Funktion erfolgreich, befindet sich die Zahl im höchsten Zustand
 		return this;
 	}
 
@@ -149,25 +167,29 @@ public class HexSolver {
 	public void printSolution(PrintStream out, boolean printSteps) {
 		// Wenn die einzelnen Umlegungen ausgegeben werden sollen
 		if (printSteps) {
-			// missingBits enthält die Indexe für Stellen, die noch belegt werden müssen, spareBits das Gegenteil
+			// missingBits enthält die Indexe für Stellen, die noch belegt werden müssen,
+			// spareBits das Gegenteil
 			Queue<Integer> missingBits = new ArrayDeque<>(), spareBits = new ArrayDeque<>();
 
 			// Repräsentiert die einzelnen Ziffern in Form ihrer Stellen
 			boolean[][] number = new boolean[digits.length][];
 			for (int i = 0; i < digits.length; i++)
-				number[i] = alphabet.getSymbolByValue(digits[i].getOriginalValue()).bits().clone();
+				number[i] =
+						alphabet.getSymbolByValue(digits[i].getOriginalValue()).bits().clone();
 
-			// Die Indexe der Ziffern von denen gerade Stellen entfernt bzw. ihnen zugefügt werden
+			// Die Indexe der Ziffern von denen Stellen entfernt bzw. ihnen zugefügt werden
 			int additionIndex = -1, removalIndex = -1;
 
-			// additions und removals haben denselben Wert und geben beide die Zahl der Umlegungen an
+			// additions und removals haben gleichen Wert, geben beide die Zahl der
+			// Umlegungen an
 			for (int i = 0; i < additions; i++) {
 				printNumber(number, out);
 
 				// Sucht nacht der nächsten Ziffer in der Stellen fehlen
 				while (missingBits.isEmpty()) {
 					var digit = digits[++additionIndex];
-					var conversion = alphabet.convert(digit.getOriginalValue(), digit.getValue());
+					var conversion =
+							alphabet.convert(digit.getOriginalValue(), digit.getValue());
 
 					// Merkt sich die fehlenden Stellen für die neue zu füllende Ziffer
 					missingBits.addAll(conversion.missingBits());
@@ -176,7 +198,8 @@ public class HexSolver {
 				// Sucht nacht der nächsten Ziffer in der Stellen überschüssig sind
 				while (spareBits.isEmpty()) {
 					var digit = digits[++removalIndex];
-					var conversion = alphabet.convert(digit.getOriginalValue(), digit.getValue());
+					var conversion =
+							alphabet.convert(digit.getOriginalValue(), digit.getValue());
 
 					// Merkt sich die überschüssigen Stellen für die neue zu leerende Ziffer
 					spareBits.addAll(conversion.spareBits());
@@ -201,7 +224,8 @@ public class HexSolver {
 	 * Gibt die Nummer in Form eines Seven Segment Displays aus.
 	 */
 	private void printNumber(boolean[][] number, PrintStream out) {
-		// Wirklich kein schöner Code, ich weiß. Aber wahrscheinlich noch der leserlichste für dieses Problem.
+		// Wirklich kein schöner Code, ich weiß. Aber wahrscheinlich noch der leserlichste für
+		// dieses Problem.
 		for (var digit : number)
 			out.print(digit[0] ? " _ " : "   ");
 		out.println();
@@ -219,6 +243,11 @@ public class HexSolver {
 			out.print(digit[2] ? "|" : " ");
 		}
 		out.println();
+	}
+
+	// For tester
+	void setDigits(Digit[] digits) {
+		this.digits = digits;
 	}
 
 	/**

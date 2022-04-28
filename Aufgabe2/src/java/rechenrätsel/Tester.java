@@ -1,5 +1,7 @@
 package rechenrätsel;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class Tester {
@@ -51,18 +53,12 @@ public class Tester {
 		var equation = parse(equationStr);
 		var tester = new Tester(equation, operators);
 		tester.printAnalysis();
+		System.out.println(ANSI_RESET);
 	}
 
-	public static void main(String[] args) {
-//		var mulDiv = new Operator[]{Operator.MULTIPLY, Operator.DIVIDE};
-		// 4*3*2*6*3*9+7*8/2*9*4-4*6-4*4*5
-//		runSingleAnalysis("4 ◦ 3 ◦ 2 ◦ 6 ◦ 3 ◦ 9 ◦ 7 ◦ 8 ◦ 2 ◦ 9 ◦ 4 ◦ 4 ◦ 6 ◦ 4 ◦ 4 ◦ 5 = 4792", Operator.values());
-//		runSingleAnalysis("3 5 7 2 3 8 2 = 222", Operator.values());
-		// runMultipleAnalysis(mulDiv);
-//		runMultipleAnalysis(Operator.values());
-
+	public static void main(String[] args) throws Exception {
 		runSingleAnalysis(null, Operator.values());
-		System.out.println(ANSI_RESET);
+//		runSingleAnalysis("5 6 5=6", Operator.values());
 	}
 
 	private static String color(int amount) {
@@ -99,19 +95,25 @@ public class Tester {
 					if (!nextOperator.hasPriority())
 						break;
 
-					if (nextOperator.canOperate(operand, nextOperand))
+					if (nextOperator.canOperate(operand, nextOperand)) {
 						operand = nextOperator.calculate(operand, nextOperand);
-					else
+//						System.out.println("Operand: " + operand);
+					} else {
+//						System.out.println("Couldn't operate on next");
 						return -1;
+					}
 				}
 
 				i = j - 1;
 			}
 
-			if (operator.canOperate(result, operand))
+			if (operator.canOperate(result, operand)) {
 				result = operator.calculate(result, operand);
-			else // Invalid
+			} else { // Invalid
+//				System.out.println("Couldn't operate on self");
+//				System.out.println("result: " + result + " Operand:" + operand);
 				return -1;
+			}
 		}
 
 		return result;
@@ -161,7 +163,8 @@ public class Tester {
 		if (amount > 0) {
 			Operator[] original = solutions.get(0);
 			Map<Operator, Integer> originalCount = new HashMap<>(4), count = new HashMap<>(4);
-			String[] sameAmountColors = new String[original.length], diffAmountColors = new String[original.length];
+			String[] sameAmountColors = new String[original.length], diffAmountColors =
+					new String[original.length];
 
 			System.out.println("(0) " + format(equation, original));
 
@@ -180,7 +183,8 @@ public class Tester {
 					count.put(op, count.getOrDefault(op, 0) + 1);
 
 				System.out.println("(" + i + ") "
-						+ format(equation, next, originalCount.equals(count) ? sameAmountColors : diffAmountColors)
+						+ format(equation, next, originalCount.equals(count) ?
+						sameAmountColors : diffAmountColors)
 						+ ANSI_RESET);
 
 				count.clear();
@@ -191,13 +195,15 @@ public class Tester {
 	private void solve(Equation equation, Operator[] operators, int index) {
 		if (index == operators.length) {
 			int result = evaluate(equation, operators);
+//			System.out.println(format(equation, operators));
+//			System.out.println("Result: " + result);
 			// cycles++;
 			// if (cycles % notifyThreshold == 0)
 			// System.out.println((int) (cycles / (double) neededCycles * 100) + "% done.");
 
 			if (result == equation.getResult()) {
 				solutions.add(operators.clone());
-				// System.out.println("Solved with " + format(equation, operators));
+//				System.out.println("Solved with " + format(equation, operators));
 			}
 		} else {
 			for (var operator : globalOperators) {
